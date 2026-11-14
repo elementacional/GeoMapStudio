@@ -28,11 +28,34 @@
 .drive-checkbox{display:flex;align-items:center;gap:7px;color:#5b746b;font-size:11px}.drive-checkbox input{accent-color:#1b6257}
 .drive-list .empty{padding:20px 8px}.drive-folder-path{font-size:10px;font-weight:600;color:#8a9d92;overflow-wrap:anywhere;margin:5px 0 6px}
 @media(max-width:800px){.panel{width:min(394px,calc(100vw - 16px))}}
+
+/* Menu discreto do cabeçalho, independente das funções do mapa */
+.brand{display:block;padding:0;overflow:visible}
+.brand-trigger{display:flex;align-items:center;gap:10px;padding:9px 15px 9px 10px;border:0;background:transparent;color:inherit;text-align:left;font:inherit;border-radius:17px;cursor:pointer}
+.brand .logo{flex:none;overflow:hidden}
+.brand .logo img{width:100%;height:100%;object-fit:contain;display:block}
+.brand .brand-name{display:block}
+.brand-dropdown{display:none;position:absolute;top:calc(100% + 6px);left:0;width:max-content;min-width:100%;padding:7px;border-radius:14px;background:rgba(251,253,251,.98);box-shadow:var(--shadow);border:1px solid var(--line);backdrop-filter:blur(16px)}
+.brand-dropdown::before{content:"";position:absolute;left:0;right:0;top:-8px;height:9px}
+.brand:hover .brand-dropdown,.brand:focus-within .brand-dropdown,.brand.menu-open .brand-dropdown{display:grid;gap:2px}
+.brand-dropdown button{border:0;background:none;border-radius:9px;color:var(--ink);font:inherit;font-size:12px;text-align:left;padding:9px 12px;cursor:pointer;white-space:nowrap}
+.brand-dropdown button:hover,.brand-dropdown button:focus-visible{background:var(--accentsoft);outline:none}
 </style>
 </head>
 <body>
 <div id="map" aria-label="Mapa interativo com KML"></div>
-<div class="brand glass"><div class="logo">◇</div><div><strong>GeoMap Studio</strong><small>Explore seu território</small></div></div>
+<div class="brand glass" id="brandMenu">
+  <button class="brand-trigger" id="brandTrigger" type="button" aria-label="Abrir menu GeoMap Studio" aria-haspopup="true" aria-expanded="false">
+    <span class="logo"><img src="data:image/png;base64,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" alt="Bússola GeoMap Studio"></span>
+    <span class="brand-name"><strong>GeoMap Studio</strong><small>Explore seu território</small></span>
+  </button>
+  <nav class="brand-dropdown" aria-label="Menu GeoMap Studio">
+    <button type="button" data-trigger="openLibrary">Biblioteca KML</button>
+    <button type="button" data-trigger="quickImport">Importar KML</button>
+    <button type="button" data-trigger="settingsButton">Preferências do mapa</button>
+    <button type="button" data-trigger="home">Vista inicial</button>
+  </nav>
+</div>
 <div class="map-switch glass" role="group" aria-label="Tipo de mapa"><button id="streets" class="active" aria-pressed="true">▤ &nbsp; Ruas</button><button id="satellite" aria-pressed="false">◉ &nbsp; Satélite</button></div>
 <div class="toolbar"><button id="openLibrary" class="circle" title="Biblioteca KML" aria-label="Abrir biblioteca KML"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/></svg></button><button id="quickImport" class="circle" title="Importar KML" aria-label="Importar KML"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></button><button id="settingsButton" class="circle" title="Opções do mapa" aria-label="Opções do mapa"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M9 4v6M16 14v6"/></svg></button></div>
 <div class="float-bottom"><button id="zoomIn" class="round" title="Ampliar" aria-label="Ampliar"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button><button id="zoomOut" class="round" title="Reduzir" aria-label="Reduzir"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button><button id="fit" class="round" title="Enquadrar KML" aria-label="Enquadrar KML"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button><button id="locate" class="round" title="Minha localização" aria-label="Minha localização"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button></div>
@@ -194,6 +217,21 @@ $('driveLoad').onclick=loadDriveSelected;
 renderDriveCatalog();driveButtons();
 
 updateList();boot();})();
+</script>
+
+<script>
+/* Acesso às funções existentes a partir do menu do nome */
+(function(){
+ const brand=document.getElementById('brandMenu'),trigger=document.getElementById('brandTrigger');
+ if(!brand||!trigger)return;
+ trigger.addEventListener('click',()=>{const opened=brand.classList.toggle('menu-open');trigger.setAttribute('aria-expanded',String(opened));});
+ brand.querySelectorAll('[data-trigger]').forEach(item=>item.addEventListener('click',()=>{
+  document.getElementById(item.getAttribute('data-trigger'))?.click();
+  brand.classList.remove('menu-open');trigger.setAttribute('aria-expanded','false');trigger.blur();
+ }));
+ document.addEventListener('click',e=>{if(!brand.contains(e.target)){brand.classList.remove('menu-open');trigger.setAttribute('aria-expanded','false');}});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){brand.classList.remove('menu-open');trigger.setAttribute('aria-expanded','false');trigger.blur();}});
+})();
 </script>
 </body>
 </html>
