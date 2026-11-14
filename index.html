@@ -40,6 +40,45 @@
 .brand:hover .brand-dropdown,.brand:focus-within .brand-dropdown,.brand.menu-open .brand-dropdown{display:grid;gap:2px}
 .brand-dropdown button{border:0;background:none;border-radius:9px;color:var(--ink);font:inherit;font-size:12px;text-align:left;padding:9px 12px;cursor:pointer;white-space:nowrap}
 .brand-dropdown button:hover,.brand-dropdown button:focus-visible{background:var(--accentsoft);outline:none}
+
+/* Biblioteca KML fixa: somente listas possuem rolagem */
+.panel{height:auto;max-height:none}
+.panel-header{flex:none;padding:19px 20px 12px}
+.panel-body{display:flex;flex-direction:column;overflow:hidden;min-height:0;flex:1;padding:0 16px 10px}
+.panel-foot{flex:none;padding:9px 16px}
+.source-tabs{flex:none;margin-bottom:9px}
+.source-view{min-height:0}
+.source-view.active#driveView{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+.source-view.active#localView{display:flex;flex-direction:column;gap:5px;flex:1;min-height:0;overflow:auto}
+.drive-config{flex:none;position:relative}
+.drive-config>summary,.layers-drawer>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.drive-config>summary::-webkit-details-marker,.layers-drawer>summary::-webkit-details-marker{display:none}
+.drive-config>summary{width:100%;border-radius:10px;background:#eaf2ee;padding:8px 11px;color:#1b6257;font-size:12px;font-weight:700;min-height:34px}
+.drive-config>summary:after,.layers-drawer>summary:after{content:"⌄";font-weight:750}
+.drive-config[open]>summary:after,.layers-drawer[open]>summary:after{content:"⌃"}
+.drive-config .drive-setup{padding:10px 3px 8px;max-height:min(43vh,340px);overflow-y:auto}
+.drive-config .drive-setup label{margin-top:2px}
+.drive-config .drive-input{padding:8px 10px}
+.drive-state{flex:none;margin:7px 0;padding:7px 9px;max-height:54px;overflow-y:auto;font-size:10px}
+.drive-toolbar{flex:none;justify-content:center;gap:8px;padding:2px 0 5px}
+.drive-toolbar>.action{flex:1}
+.icon-action{font-family:inherit;font-size:19px;line-height:1;min-height:35px;display:grid;place-items:center;padding:6px 9px}
+.drive-utility{flex:none;margin:5px 0}
+.drive-utility .drive-input{padding:8px 10px}
+.drive-summary{flex:none;margin:4px 0 8px}
+.drive-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding-right:5px}
+.drive-help{flex:none;font-size:10px;color:#648278}
+.drive-help>summary{cursor:pointer;padding:5px 0}
+.drive-help:not([open])>summary span{display:none}
+.drive-help[open]{max-height:125px;overflow-y:auto}
+.drive-help .note{margin:2px 0}
+.layers-drawer{flex:none;border-top:1px solid #e3ebe5;margin-top:7px}
+.layers-drawer>summary{padding:7px 5px;font-size:11px;font-weight:700;color:#466b60}
+.layers-drawer #files{max-height:110px;overflow-y:auto;scrollbar-width:thin}
+.layers-drawer .search{padding:7px 9px;margin-bottom:5px}
+.panel-actions{flex:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:5px;gap:7px}
+.panel-actions>.action{min-width:0}
+@media(max-height:650px){.panel-header{padding:9px 15px 6px}.panel h2{font-size:17px}.panel-foot{padding:5px 12px}.drive-state{max-height:34px}.source-tabs button{padding:7px}}
 </style>
 </head>
 <body>
@@ -69,25 +108,24 @@
       <p class="note">Arquivos locais são processados no navegador, sem upload para a nuvem.</p>
     </section>
     <section id="driveView" class="source-view" aria-label="Biblioteca do Google Drive">
-      <div class="drive-setup">
+      <details class="drive-config" id="driveConfig"><summary title="Configurações OAuth e pasta do Google Drive" aria-label="Abrir configurações OAuth e pasta do Google Drive">⚙ <span>Configurações do Drive</span></summary><div class="drive-setup">
         <label for="clientId">OAuth Client ID (Google Cloud)</label>
         <input id="clientId" class="drive-input" spellcheck="false" autocomplete="off" placeholder="123456789-....apps.googleusercontent.com">
         <label for="folderUrl">Pasta do Drive (link ou ID, opcional)</label>
         <input id="folderUrl" class="drive-input" spellcheck="false" autocomplete="off" placeholder="Vazio = pesquisar todo o Meu Drive">
-        <div class="drive-actions"><button id="driveConnect" class="action primary">Conectar Drive</button><button id="driveDisconnect" class="action" disabled>Desconectar</button></div>
+        <div class="drive-actions"><button id="driveConnect" class="action primary icon-action" title="Conectar ou reconectar ao Google Drive" aria-label="Conectar Drive">↗</button><button id="driveDisconnect" class="action icon-action" title="Desconectar Google Drive" aria-label="Desconectar Drive" disabled>⏻</button></div>
       </div>
-      <div id="driveState" class="drive-state" role="status" aria-live="polite">Configure o OAuth Client ID e conecte sua conta. O aplicativo solicita acesso somente de leitura.</div>
-      <div class="drive-actions"><button id="driveScan" class="action" disabled>↻ Atualizar catálogo</button><button id="driveLoad" class="action primary" disabled>Exibir selecionados</button></div>
+      </details><div id="driveState" class="drive-state" role="status" aria-live="polite">Configure o OAuth Client ID e conecte sua conta. O aplicativo solicita acesso somente de leitura.</div>
+      <div class="drive-actions drive-toolbar" aria-label="Ferramentas do catálogo"><button id="driveScan" class="action icon-action" title="Atualizar catálogo" aria-label="Atualizar catálogo" disabled>↻</button><button id="driveLoad" class="action primary icon-action" title="Exibir arquivos KML selecionados no mapa" aria-label="Exibir selecionados" disabled>◉</button></div>
       <div class="drive-utility"><input id="driveSearch" class="drive-input" type="search" placeholder="Buscar KML ou pasta..."><label class="drive-checkbox"><input id="selectAllDrive" type="checkbox"> Todos</label></div>
       <div id="driveSummary" class="drive-summary">Nenhum arquivo indexado.</div>
       <div id="driveList" class="drive-list"><div class="empty">Conecte o Google Drive para identificar os arquivos KML.</div></div>
-      <p class="note">O catálogo é atualizado sob demanda. Pastas e subpastas são analisadas; apenas arquivos KML são carregados no mapa. Nenhum arquivo é alterado no Drive.</p>
-      <p class="drive-small">No GitHub Pages, autorize a origem HTTPS no Google Cloud. Para testar na máquina com Drive, use <b>http://localhost</b>; a abertura direta por <b>file://</b> continua disponível para KML locais.</p>
+      <details class="drive-help"><summary title="Orientações sobre o catálogo">ⓘ <span>Informações</span></summary><p class="note">O catálogo é atualizado sob demanda. Pastas e subpastas são analisadas; apenas arquivos KML são carregados no mapa. Nenhum arquivo é alterado no Drive.</p><p class="drive-small">No GitHub Pages, autorize a origem HTTPS no Google Cloud. Para testar na máquina com Drive, use <b>http://localhost</b>; a abertura direta por <b>file://</b> continua disponível para KML locais.</p></details>
     </section>
-    <div class="section-title"><span>Camadas no mapa</span><span id="count" class="count">0 arquivos</span></div>
+    <details class="layers-drawer"><summary>Camadas no mapa <span id="count" class="count">0 arquivos</span></summary>
     <div class="search"><svg viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/></svg><input id="search" type="search" placeholder="Filtrar camadas..." aria-label="Pesquisar camadas importadas"></div>
     <div id="files"><div class="empty">Os arquivos carregados aparecem aqui.</div></div>
-    <div class="panel-actions"><button id="fitAll" class="action primary">Enquadrar camadas</button><button id="export" class="action">Exportar GeoJSON</button><button id="clear" class="action">Limpar camadas</button><button id="home" class="action">Vista inicial</button></div>
+    </details><div class="panel-actions" aria-label="Ações das camadas"><button id="fitAll" class="action primary icon-action" title="Enquadrar camadas" aria-label="Enquadrar camadas">⛶</button><button id="export" class="action icon-action" title="Exportar GeoJSON" aria-label="Exportar GeoJSON">⇩</button><button id="clear" class="action icon-action" title="Limpar camadas" aria-label="Limpar camadas">⌫</button><button id="home" class="action icon-action" title="Vista inicial" aria-label="Vista inicial">⌂</button></div>
   </div><div class="panel-foot">GeoMap Studio · Clean v2.1 · Local + Google Drive</div>
 </aside>
 <div class="settings glass" id="settings"><h3>Preferências do mapa</h3><label for="year">Mosaico Copernicus Sentinel-2</label><select id="year"><option value="2025">2025</option><option value="2024">2024</option><option value="2023">2023</option><option value="2022">2022</option><option value="2021">2021</option><option value="2020">2020</option></select><label class="toggle"><input id="labels" type="checkbox" checked> Mostrar nomes no satélite</label><p class="note">Imagens históricas; não representam satélite em tempo real. O serviço Copernicus da EOX possui condições de uso não comercial.</p></div>
