@@ -80,14 +80,12 @@
 .panel-actions>.action{min-width:0}
 @media(max-height:650px){.panel-header{padding:9px 15px 6px}.panel h2{font-size:17px}.panel-foot{padding:5px 12px}.drive-state{max-height:34px}.source-tabs button{padding:7px}}
 
-/* Biblioteca com altura fixa e lista rolável, independente do catálogo */
+/* Correções pontuais de layout sem alterar o OAuth já funcional */
 .panel{top:16px!important;bottom:16px!important;height:calc(100dvh - 32px)!important;max-height:calc(100dvh - 32px)!important;min-height:0!important}
 .panel-body{min-height:0!important;overflow:hidden!important}
 #driveView.source-view.active{flex:1 1 0!important;min-height:0!important;max-height:100%;overflow:hidden!important}
 #driveList.drive-list{flex:1 1 0!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain}
-.drive-folder,.drive-file{flex-shrink:0}
-#driveConnect,#driveDisconnect{font-size:16px!important;font-weight:650!important;line-height:1!important;min-height:34px}
-#driveConnect{font-size:18px!important}
+#driveConnect,#driveDisconnect{font-size:12px!important;font-weight:650!important;line-height:1.15!important;min-height:34px;padding:6px!important}
 .panel .panel-actions{flex:0 0 auto}
 @media(max-width:800px){.panel{top:8px!important;bottom:8px!important;height:calc(100dvh - 16px)!important;max-height:calc(100dvh - 16px)!important}}
 </style>
@@ -173,27 +171,13 @@ $('kml').onchange=async e=>{await loadFiles(e.target.files);e.target.value=''};$
 const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.readonly';
 const FOLDER_MIME='application/vnd.google-apps.folder';
 let driveToken=null,driveTokenExpires=0,driveTokenClient=null,driveCatalog=[],driveSelected=new Set(),driveBusy=false;
-const DRIVE_SESSION_KEY='geomap_drive_session_v1';
-function saveDriveSession(){
-  try{sessionStorage.setItem(DRIVE_SESSION_KEY,JSON.stringify({token:driveToken,expires:driveTokenExpires,client:$('clientId').value.trim(),scope:DRIVE_SCOPE}))}catch(e){}
-}
-function forgetDriveSession(){try{sessionStorage.removeItem(DRIVE_SESSION_KEY)}catch(e){}}
-function restoreDriveSession(){
-  try{
-    const saved=JSON.parse(sessionStorage.getItem(DRIVE_SESSION_KEY)||'null');
-    if(saved&&saved.token&&saved.scope===DRIVE_SCOPE&&saved.client===$('clientId').value.trim()&&Number(saved.expires)>Date.now()+15000){
-      driveToken=saved.token;driveTokenExpires=Number(saved.expires);return true;
-    }
-  }catch(e){}
-  forgetDriveSession();return false;
-}
 const storedClient=localStorage.getItem('geomap_drive_client_id')||'';
 const storedFolder=localStorage.getItem('geomap_drive_folder_id')||'';
 $('clientId').value=storedClient;$('folderUrl').value=storedFolder;
 function sourceTab(drive){$('tabDrive').classList.toggle('active',drive);$('tabLocal').classList.toggle('active',!drive);$('driveView').classList.toggle('active',drive);$('localView').classList.toggle('active',!drive);$('tabDrive').setAttribute('aria-selected',String(drive));$('tabLocal').setAttribute('aria-selected',String(!drive))}
 $('tabDrive').onclick=()=>sourceTab(true);$('tabLocal').onclick=()=>sourceTab(false);
 function setDriveState(value){$('driveState').textContent=value}
-function driveButtons(){const connected=!!driveToken&&Date.now()<driveTokenExpires;$('driveConnect').textContent=connected?'↻':'↗';$('driveConnect').title=connected?'Renovar autorização Google Drive':'Conectar Google Drive';$('driveConnect').setAttribute('aria-label',connected?'Reconectar Drive':'Conectar Drive');$('driveDisconnect').disabled=!driveToken;$('driveScan').disabled=!connected||driveBusy;$('driveLoad').disabled=!connected||driveBusy||!driveSelected.size;$('selectAllDrive').checked=driveCatalog.length>0&&driveCatalog.every(f=>driveSelected.has(f.id));}
+function driveButtons(){const connected=!!driveToken&&Date.now()<driveTokenExpires;$('driveConnect').textContent=connected?'Reconectar':'Conectar Drive';$('driveDisconnect').disabled=!driveToken;$('driveScan').disabled=!connected||driveBusy;$('driveLoad').disabled=!connected||driveBusy||!driveSelected.size;$('selectAllDrive').checked=driveCatalog.length>0&&driveCatalog.every(f=>driveSelected.has(f.id));}
 function extractFolderId(raw){const s=String(raw||'').trim();if(!s)return '';const match=s.match(/\/folders\/([a-zA-Z0-9_-]+)/)||s.match(/[?&]id=([a-zA-Z0-9_-]+)/);if(match)return match[1];if(/^[a-zA-Z0-9_-]{10,}$/.test(s))return s;throw Error('Informe o link de uma pasta do Drive ou seu ID, sem parâmetros adicionais.')}
 function ensureDriveOrigin(){if(location.protocol==='file:')throw Error('Google OAuth não funciona ao abrir diretamente por file://. Publique no GitHub Pages ou abra em http://localhost. O modo KML local continua funcionando.');if(!/^https?:$/.test(location.protocol))throw Error('A conexão Drive exige HTTPS ou localhost.');}
 function ensureGIS(){if(window.google?.accounts?.oauth2)return Promise.resolve();return new Promise((resolve,reject)=>{const old=document.getElementById('gisSdk');if(old){old.addEventListener('load',resolve,{once:true});old.addEventListener('error',()=>reject(Error('Não foi possível carregar o login Google.')),{once:true});return}const script=document.createElement('script');script.id='gisSdk';script.src='https://accounts.google.com/gsi/client';script.async=true;script.onload=resolve;script.onerror=()=>reject(Error('Falha ao obter Google Identity Services.'));document.head.appendChild(script)})}
@@ -205,16 +189,16 @@ function authGoogle(){return new Promise((resolve,reject)=>{
   try{driveTokenClient=google.accounts.oauth2.initTokenClient({client_id:clientId,scope:DRIVE_SCOPE,callback:response=>{
     if(response.error){reject(Error(response.error_description||response.error));return}
     driveToken=response.access_token;driveTokenExpires=Date.now()+(Number(response.expires_in)||3500)*1000-60000;
-    localStorage.setItem('geomap_drive_client_id',clientId);saveDriveSession();resolve();
+    localStorage.setItem('geomap_drive_client_id',clientId);resolve();
   },error_callback:e=>reject(Error(e.message||e.type||'Falha na autorização Google.'))});
-  driveTokenClient.requestAccessToken({prompt:''});
+  driveTokenClient.requestAccessToken({prompt:'consent'});
   }catch(e){reject(e)}
 })}
 async function driveRequest(url,opts={}){
   if(!driveToken||Date.now()>=driveTokenExpires)throw Error('Sua sessão do Google expirou. Clique em Reconectar.');
   const response=await fetch(url,{...opts,headers:{Authorization:'Bearer '+driveToken,...opts.headers}});
   if(!response.ok){let error;try{error=await response.json()}catch{}const msg=error?.error?.message||response.statusText;
-    if(response.status===401){forgetDriveSession();driveToken=null;driveTokenExpires=0;driveButtons();throw Error('Sessão expirada. Use Reconectar.');}
+    if(response.status===401)throw Error('Sessão expirada. Use Reconectar.');
     if(response.status===403)throw Error('Acesso negado ou cota da API excedida: '+msg);
     throw Error('Google Drive ('+response.status+'): '+msg)}
   return response;
@@ -250,13 +234,7 @@ async function scanDrive(){if(driveBusy)return;driveBusy=true;driveButtons();set
     setDriveState('Sincronizado: '+result.length+' KML em '+new Set(result.map(f=>f.path)).size+' grupo(s).');
   }catch(e){setDriveState('Falha: '+e.message);toast('Falha ao consultar Drive. '+e.message)}finally{driveBusy=false;driveButtons()}}
 $('driveConnect').onclick=async()=>{try{ensureDriveOrigin();await ensureGIS();await authGoogle();driveButtons();setDriveState('Conectado. Iniciando leitura de arquivos…');await scanDrive()}catch(e){setDriveState('Não conectado: '+e.message);toast(e.message);driveButtons()}};
-$('driveDisconnect').onclick=()=>{forgetDriveSession();if(driveToken&&window.google?.accounts?.oauth2)google.accounts.oauth2.revoke(driveToken,()=>{});driveToken=null;driveTokenExpires=0;driveTokenClient=null;driveCatalog=[];driveSelected.clear();renderDriveCatalog();driveButtons();setDriveState('Desconectado. As camadas já carregadas permanecem no mapa até serem removidas.');};
-// Restaura na mesma aba somente enquanto a autorização for válida.
-if(restoreDriveSession()){
-  sourceTab(true);driveButtons();setDriveState('Sessão restaurada nesta aba. Atualizando catálogo…');
-  scanDrive();
-}else{driveButtons();}
-$('clientId').addEventListener('change',()=>{if(driveToken){forgetDriveSession();driveToken=null;driveTokenExpires=0;driveButtons();}});
+$('driveDisconnect').onclick=()=>{if(driveToken&&window.google?.accounts?.oauth2)google.accounts.oauth2.revoke(driveToken,()=>{});driveToken=null;driveTokenExpires=0;driveTokenClient=null;driveCatalog=[];driveSelected.clear();renderDriveCatalog();driveButtons();setDriveState('Desconectado. As camadas já carregadas permanecem no mapa até serem removidas.');};
 $('driveScan').onclick=scanDrive;
 $('driveSearch').oninput=renderDriveCatalog;
 $('selectAllDrive').onchange=e=>{const q=$('driveSearch').value.trim().toLocaleLowerCase('pt-BR');const current=driveCatalog.filter(f=>(f.path+'/'+f.name).toLocaleLowerCase('pt-BR').includes(q));for(const item of current){if(e.target.checked)driveSelected.add(item.id);else driveSelected.delete(item.id)}renderDriveCatalog()};
